@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Defense Logistics | Maintenance</title>
+    <link th:href="@{/css/bootstrap.min.css}" href="/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<nav class="navbar navbar-dark bg-dark"><div class="container">
+    <a class="navbar-brand" th:href="@{/}">Defense Logistics</a>
+    <div class="d-flex gap-2"><a class="btn btn-outline-light btn-sm" th:href="@{/}">Dashboard</a>
+    </div>
+</div></nav>
+<main class="container py-4">
+    <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+    <h1 class="h3">Maintenance management</h1>
+    <p class="text-secondary">Schedule preventive and corrective maintenance and retain service history.</p>
+    <section class="card shadow-sm mb-4">
+        <div class="card-header">Schedule maintenance</div>
+        <div class="card-body">
+            <form th:action="@{/submit-maintenance}" th:object="${maintenanceRecord}" method="post">
+                <input type="hidden" th:field="*{id}">
+                <div class="row g-3">
+                    <div class="col-md-2"><label class="form-label">Asset type</label>
+                        <select class="form-select" th:field="*{assetType}" required>
+                            <option value="PERSONNEL">Personnel</option><option value="EQUIPMENT">Equipment</option>
+                            <option value="VEHICLE">Vehicle</option><option value="OTHER">Other</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3"><label class="form-label">Asset name / ID</label><input class="form-control" th:field="*{assetName}" required></div>
+                    <div class="col-md-2"><label class="form-label">Type</label>
+                        <select class="form-select" th:field="*{maintenanceType}" required>
+                            <option value="PREVENTIVE">Preventive</option><option value="CORRECTIVE">Corrective</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2"><label class="form-label">Scheduled date</label><input class="form-control" type="date" th:field="*{scheduledDate}" required></div>
+                    <div class="col-md-3"><label class="form-label">Status</label>
+                        <select class="form-select" th:field="*{status}">
+                            <option value="SCHEDULED">Scheduled</option><option value="IN_PROGRESS">In progress</option>
+                            <option value="COMPLETED">Completed</option><option value="CANCELLED">Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="col-12"><label class="form-label">Service history / notes</label>
+                        <textarea class="form-control" rows="2" th:field="*{serviceHistory}"></textarea>
+                    </div>
+                </div>
+                <button class="btn btn-primary mt-3" type="submit">Save maintenance</button>
+            </form>
+        </div>
+    </section>
+    <section class="card shadow-sm"><div class="table-responsive">
+        <table class="table table-striped mb-0">
+            <thead><tr><th>Asset</th><th>Maintenance</th><th>Scheduled</th><th>Status</th><th>Service history</th><th>Action</th></tr></thead>
+            <tbody><tr th:each="record : ${maintenanceRecords}">
+                <td><span th:text="${record.assetType}"></span> — <span th:text="${record.assetName}"></span></td>
+                <td th:text="${record.maintenanceType}"></td><td th:text="${record.scheduledDate}"></td>
+                <td th:text="${record.status}"></td><td th:text="${record.serviceHistory}"></td>
+                <td><form th:action="@{/delete-maintenance}" method="post">
+                    <input type="hidden" name="id" th:value="${record.id}">
+                    <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                </form></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(maintenanceRecords)}"><td colspan="6" class="text-center text-secondary">No maintenance records.</td></tr>
+            </tbody>
+        </table>
+    </div></section>
+</main>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Defense Logistics | Resource Allocation</title>
+    <link th:href="@{/css/bootstrap.min.css}" href="/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<nav class="navbar navbar-dark bg-dark"><div class="container">
+    <a class="navbar-brand" th:href="@{/}">Defense Logistics</a>
+    <div class="d-flex gap-2"><a class="btn btn-outline-light btn-sm" th:href="@{/}">Dashboard</a>
+    </div>
+</div></nav>
+<main class="container py-4">
+    <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+    <h1 class="h3">Deployment &amp; resource allocation</h1>
+    <p class="text-secondary">Assign available resources to authorized operational requirements.</p>
+    <section class="card shadow-sm mb-4"><div class="card-header">Allocate a resource</div><div class="card-body">
+        <form th:action="@{/submit-allocation}" th:object="${allocation}" method="post">
+            <input type="hidden" th:field="*{id}">
+            <div class="row g-3">
+                <div class="col-md-2"><label class="form-label">Resource type</label>
+                    <select class="form-select" th:field="*{resourceType}" required>
+                        <option value="PERSONNEL">Personnel</option><option value="EQUIPMENT">Equipment</option>
+                        <option value="VEHICLE">Vehicle</option><option value="SUPPLIES">Supplies</option>
+                    </select>
+                </div>
+                <div class="col-md-3"><label class="form-label">Resource name / ID</label><input class="form-control" th:field="*{resourceName}" required></div>
+                <div class="col-md-1"><label class="form-label">Qty</label><input class="form-control" type="number" min="1" th:field="*{quantity}" required></div>
+                <div class="col-md-3"><label class="form-label">Assigned to / unit</label><input class="form-control" th:field="*{assignedTo}" required></div>
+                <div class="col-md-3"><label class="form-label">Status</label>
+                    <select class="form-select" th:field="*{status}">
+                        <option value="ALLOCATED">Allocated</option><option value="DEPLOYED">Deployed</option>
+                        <option value="RETURNED">Returned</option><option value="CANCELLED">Cancelled</option>
+                    </select>
+                </div>
+                <div class="col-12"><label class="form-label">Operational requirement</label>
+                    <input class="form-control" th:field="*{operationalRequirement}" required>
+                </div>
+                <div class="col-md-3"><label class="form-label">Start date</label><input class="form-control" type="date" th:field="*{startDate}"></div>
+                <div class="col-md-3"><label class="form-label">End date</label><input class="form-control" type="date" th:field="*{endDate}"></div>
+            </div>
+            <button class="btn btn-primary mt-3" type="submit">Save allocation</button>
+        </form>
+    </div></section>
+    <section class="card shadow-sm"><div class="table-responsive">
+        <table class="table table-striped mb-0">
+            <thead><tr><th>Resource</th><th>Qty</th><th>Requirement</th><th>Assigned to</th><th>Status</th><th>Dates</th><th>Action</th></tr></thead>
+            <tbody><tr th:each="item : ${allocations}">
+                <td><span th:text="${item.resourceType}"></span> — <span th:text="${item.resourceName}"></span></td>
+                <td th:text="${item.quantity}"></td><td th:text="${item.operationalRequirement}"></td><td th:text="${item.assignedTo}"></td>
+                <td th:text="${item.status}"></td><td><span th:text="${item.startDate}"></span> to <span th:text="${item.endDate}"></span></td>
+                <td><form th:action="@{/delete-allocation}" method="post">
+                    <input type="hidden" name="id" th:value="${item.id}">
+                    <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                </form></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(allocations)}"><td colspan="7" class="text-center text-secondary">No allocations yet.</td></tr>
+            </tbody>
+        </table>
+    </div></section>
+</main>
+</body>
+</html>

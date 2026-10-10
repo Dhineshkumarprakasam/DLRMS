@@ -1,7 +1,16 @@
 package com.example.demo.controller;
 
-import com.example.demo.model.SupplyItem;
+
+import com.example.demo.model.LogisticsRequest;
+
+import com.example.demo.model.MaintenanceRecord;
+import com.example.demo.model.ResourceAllocation;
 import com.example.demo.model.User;
+import com.example.demo.model.Vehicle;
+import java.util.Arrays;
+import jakarta.servlet.http.HttpSession;
+import java.util.List;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,13 +19,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
+import com.example.demo.model.*;
 @Controller
 public class IndexPageController {
 
     private final String BACKEND_URL = "http://localhost:8081/api/personnel";
     private final String SUPPLIES_BACKEND_URL = "http://localhost:8082/api/supplies";
     private final String EQUIPMENT_BACKEND_URL = "http://localhost:8084/api/equipment";
+    @Value("${services.personnel.logistics-url:http://localhost:8081/api}")
+    private String logisticsBackendUrl;
     private final RestTemplate restTemplate;
 
     public IndexPageController(RestTemplate restTemplate) {
@@ -25,7 +36,151 @@ public class IndexPageController {
 
     @GetMapping({"/", "/index"})
     public String showIndexPage(Model model) {
+        try {
+            LogisticsRequest[] requests = restTemplate.getForObject(logisticsBackendUrl + "/requests", LogisticsRequest[].class);
+            MaintenanceRecord[] maintenance = restTemplate.getForObject(logisticsBackendUrl + "/maintenance", MaintenanceRecord[].class);
+            ResourceAllocation[] allocations = restTemplate.getForObject(logisticsBackendUrl + "/allocations", ResourceAllocation[].class);
+            SupplyItem[] supplies = restTemplate.getForObject(SUPPLIES_BACKEND_URL, SupplyItem[].class);
+            EquipmentDTO[] equipment = restTemplate.getForObject(EQUIPMENT_BACKEND_URL, EquipmentDTO[].class);
+            Vehicle[] vehicles = restTemplate.getForObject("http://localhost:8083/api/vehicles", Vehicle[].class);
+            model.addAttribute("pendingRequests", requests == null ? 0 : Arrays.stream(requests)
+                    .filter(request -> "PENDING".equals(request.getStatus())).count());
+            model.addAttribute("activeMaintenance", maintenance == null ? 0 : Arrays.stream(maintenance)
+                    .filter(record -> !"COMPLETED".equals(record.getStatus())).count());
+            model.addAttribute("activeAllocations", allocations == null ? 0 : allocations.length);
+            model.addAttribute("supplyCount", supplies == null ? 0 : supplies.length);
+            model.addAttribute("equipmentCount", equipment == null ? 0 : equipment.length);
+            model.addAttribute("vehicleCount", vehicles == null ? 0 : vehicles.length);
+            long lowStockItems = supplies == null ? 0 : Arrays.stream(supplies)
+                    .filter(item -> item.getQuantityOnHand() != null && item.getReorderLevel() != null
+                            && item.getQuantityOnHand().compareTo(item.getReorderLevel()) <= 0)
+                    .count();
+            long availableEquipment = equipment == null ? 0 : Arrays.stream(equipment)
+                    .filter(item -> "AVAILABLE".equalsIgnoreCase(item.getStatus())).count();
+            long availableVehicles = vehicles == null ? 0 : Arrays.stream(vehicles)
+                    .filter(vehicle -> "AVAILABLE".equalsIgnoreCase(vehicle.getStatus())).count();
+            model.addAttribute("lowStockItems", lowStockItems);
+            model.addAttribute("availableResources", availableEquipment + availableVehicles);
+        } catch (Exception exception) {
+            model.addAttribute("error", "Could not load dashboard data. Check that the logistics and resource services are running.");
+        }
         return "index";
+    }
+
+    @GetMapping("/requests")
+    public String showRequests(Model model) {
+        model.addAttribute("request", new LogisticsRequest());
+        try {
+            LogisticsRequest[] requests = restTemplate.getForObject(logisticsBackendUrl + "/requests", LogisticsRequest[].class);
+            model.addAttribute("requests", requests == null ? List.of() : Arrays.asList(requests));
+        } catch (Exception exception) {
+            model.addAttribute("requests", List.of());
+            model.addAttribute("error", "Could not load requests. Check that the personnel service is running.");
+        }
+        return "requests";
+    }
+
+    @PostMapping("/submit-request")
+    public String submitRequest(@ModelAttribute LogisticsRequest request, HttpSession session,
+                                RedirectAttributes redirectAttributes) {
+        try {
+            String requester = session != null && session.getAttribute("user") != null
+                    ? (String) session.getAttribute("user") : "ADMIN";
+            request.setRequester(requester);
+            restTemplate.postForObject(logisticsBackendUrl + "/requests", request, LogisticsRequest.class);
+            redirectAttributes.addFlashAttribute("message", "Request submitted for approval.");
+        } catch (Exception exception) {
+            redirectAttributes.addFlashAttribute("error", "Could not submit request. Check the request details and service.");
+        }
+        return "redirect:/requests";
+    }
+
+    @PostMapping("/update-request")
+    public String updateRequest(@ModelAttribute LogisticsRequest request, RedirectAttributes redirectAttributes) {
+        try {
+            restTemplate.put(logisticsBackendUrl + "/requests/" + request.getId(), request);
+            redirectAttributes.addFlashAttribute("message", "Request updated.");
+        } catch (Exception exception) {
+            redirectAttributes.addFlashAttribute("error", "Could not update request. Check the service and request status.");
+        }
+        return "redirect:/requests";
+    }
+
+    @PostMapping("/delete-request")
+    public String deleteRequest(@RequestParam Long id, RedirectAttributes redirectAttributes) {
+        try {
+            restTemplate.delete(logisticsBackendUrl + "/requests/" + id);
+            redirectAttributes.addFlashAttribute("message", "Request deleted.");
+        } catch (Exception exception) {
+            redirectAttributes.addFlashAttribute("error", "Could not delete request. Check that the service is running.");
+        }
+        return "redirect:/requests";
+    }
+
+    @GetMapping("/maintenance")
+    public String showMaintenance(Model model) {
+        model.addAttribute("maintenanceRecord", new MaintenanceRecord());
+        loadMaintenance(model);
+        return "maintenance";
+    }
+
+    @PostMapping("/submit-maintenance")
+    public String saveMaintenance(@ModelAttribute MaintenanceRecord record, RedirectAttributes redirectAttributes) {
+        try {
+            if (record.getId() == null) {
+                restTemplate.postForObject(logisticsBackendUrl + "/maintenance", record, MaintenanceRecord.class);
+            } else {
+                restTemplate.put(logisticsBackendUrl + "/maintenance/" + record.getId(), record);
+            }
+            redirectAttributes.addFlashAttribute("message", "Maintenance record saved.");
+        } catch (Exception exception) {
+            redirectAttributes.addFlashAttribute("error", "Could not save maintenance. Check the service and record details.");
+        }
+        return "redirect:/maintenance";
+    }
+
+    @PostMapping("/delete-maintenance")
+    public String deleteMaintenance(@RequestParam Long id, RedirectAttributes redirectAttributes) {
+        try {
+            restTemplate.delete(logisticsBackendUrl + "/maintenance/" + id);
+            redirectAttributes.addFlashAttribute("message", "Maintenance record deleted.");
+        } catch (Exception exception) {
+            redirectAttributes.addFlashAttribute("error", "Could not delete maintenance record.");
+        }
+        return "redirect:/maintenance";
+    }
+
+    @GetMapping("/allocations")
+    public String showAllocations(Model model) {
+        model.addAttribute("allocation", new ResourceAllocation());
+        loadAllocations(model);
+        return "allocations";
+    }
+
+    @PostMapping("/submit-allocation")
+    public String saveAllocation(@ModelAttribute ResourceAllocation allocation, RedirectAttributes redirectAttributes) {
+        try {
+            if (allocation.getId() == null) {
+                restTemplate.postForObject(logisticsBackendUrl + "/allocations", allocation, ResourceAllocation.class);
+            } else {
+                restTemplate.put(logisticsBackendUrl + "/allocations/" + allocation.getId(), allocation);
+            }
+            redirectAttributes.addFlashAttribute("message", "Resource allocation saved.");
+        } catch (Exception exception) {
+            redirectAttributes.addFlashAttribute("error", "Could not save allocation. Check the service and allocation details.");
+        }
+        return "redirect:/allocations";
+    }
+
+    @PostMapping("/delete-allocation")
+    public String deleteAllocation(@RequestParam Long id, RedirectAttributes redirectAttributes) {
+        try {
+            restTemplate.delete(logisticsBackendUrl + "/allocations/" + id);
+            redirectAttributes.addFlashAttribute("message", "Resource allocation deleted.");
+        } catch (Exception exception) {
+            redirectAttributes.addFlashAttribute("error", "Could not delete allocation.");
+        }
+        return "redirect:/allocations";
     }
 
     @GetMapping("/personnel")
@@ -196,6 +351,26 @@ public class IndexPageController {
         } catch (Exception e) {
             model.addAttribute("equipmentList", new EquipmentDTO[0]);
             model.addAttribute("error", "Could not load equipment. Check that the equipment service and database are running.");
+        }
+    }
+
+    private void loadMaintenance(Model model) {
+        try {
+            MaintenanceRecord[] records = restTemplate.getForObject(logisticsBackendUrl + "/maintenance", MaintenanceRecord[].class);
+            model.addAttribute("maintenanceRecords", records == null ? List.of() : Arrays.asList(records));
+        } catch (Exception exception) {
+            model.addAttribute("maintenanceRecords", List.of());
+            model.addAttribute("error", "Could not load maintenance records.");
+        }
+    }
+
+    private void loadAllocations(Model model) {
+        try {
+            ResourceAllocation[] allocations = restTemplate.getForObject(logisticsBackendUrl + "/allocations", ResourceAllocation[].class);
+            model.addAttribute("allocations", allocations == null ? List.of() : Arrays.asList(allocations));
+        } catch (Exception exception) {
+            model.addAttribute("allocations", List.of());
+            model.addAttribute("error", "Could not load resource allocations.");
         }
     }
 

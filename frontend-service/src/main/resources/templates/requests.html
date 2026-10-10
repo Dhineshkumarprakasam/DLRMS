@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Defense Logistics | Requests</title>
+    <link th:href="@{/css/bootstrap.min.css}" href="/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<nav class="navbar navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand" th:href="@{/}">Defense Logistics</a>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-light btn-sm" th:href="@{/}">Dashboard</a>
+        </div>
+    </div>
+</nav>
+<main class="container py-4">
+    <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+    <h1 class="h3 mb-1">Logistics requests</h1>
+    <p class="text-secondary">Request personnel, equipment, transportation, or supplies and track the decision.</p>
+
+    <section class="card shadow-sm mb-4">
+        <div class="card-header">Submit a request</div>
+        <div class="card-body">
+            <form th:action="@{/submit-request}" th:object="${request}" method="post">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label" for="requestType">Request type</label>
+                        <select class="form-select" id="requestType" th:field="*{requestType}" required>
+                            <option value="">Choose...</option>
+                            <option value="PERSONNEL">Personnel</option>
+                            <option value="EQUIPMENT">Equipment</option>
+                            <option value="TRANSPORTATION">Transportation</option>
+                            <option value="SUPPLIES">Supplies</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label" for="quantity">Quantity</label>
+                        <input class="form-control" id="quantity" type="number" min="1" th:field="*{quantity}" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="requiredDate">Required by</label>
+                        <input class="form-control" id="requiredDate" type="date" th:field="*{requiredDate}">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="description">Details / operational requirement</label>
+                        <textarea class="form-control" id="description" rows="3" maxlength="1000"
+                                  th:field="*{description}" required></textarea>
+                    </div>
+                </div>
+                <button class="btn btn-primary mt-3" type="submit">Submit request</button>
+            </form>
+        </div>
+    </section>
+
+    <section class="card shadow-sm">
+        <div class="card-header">Submitted requests</div>
+        <div class="table-responsive">
+            <table class="table table-striped align-middle mb-0">
+                <thead><tr>
+                    <th>Requester</th><th>Type</th><th>Details</th><th>Qty</th>
+                    <th>Required by</th><th>Status</th><th>Assignment / note</th><th>Action</th>
+                </tr></thead>
+                <tbody>
+                <tr th:each="item : ${requests}">
+                    <td th:text="${item.requester}"></td>
+                    <td th:text="${item.requestType}"></td>
+                    <td th:text="${item.description}"></td>
+                    <td th:text="${item.quantity}"></td>
+                    <td th:text="${item.requiredDate}"></td>
+                    <td><span class="badge text-bg-secondary" th:text="${item.status}"></span></td>
+                    <td>
+                        <span th:if="${item.assignedTo != null}" th:text="${item.assignedTo}"></span>
+                        <span th:if="${item.adminNote != null}" th:text="${item.adminNote}"></span>
+                    </td>
+                    <td class="text-nowrap">
+                        <form th:action="@{/update-request}" method="post" class="d-flex flex-column gap-2">
+                            <input type="hidden" name="id" th:value="${item.id}">
+                            <select class="form-select form-select-sm" name="status">
+                                <option value="PENDING" th:selected="${item.status == 'PENDING'}">Pending</option>
+                                <option value="APPROVED" th:selected="${item.status == 'APPROVED'}">Approved</option>
+                                <option value="REJECTED" th:selected="${item.status == 'REJECTED'}">Rejected</option>
+                                <option value="FULFILLED" th:selected="${item.status == 'FULFILLED'}">Fulfilled</option>
+                            </select>
+                            <input class="form-control form-control-sm" name="assignedTo" placeholder="Assign to"
+                                   th:value="${item.assignedTo}">
+                            <input class="form-control form-control-sm" name="adminNote" placeholder="Admin note"
+                                   th:value="${item.adminNote}">
+                            <button class="btn btn-sm btn-primary" type="submit">Save</button>
+                        </form>
+                        <form th:action="@{/delete-request}" method="post" class="mt-1">
+                            <input type="hidden" name="id" th:value="${item.id}">
+                            <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(requests)}">
+                    <td colspan="8" class="text-center text-secondary">No requests to show.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>
