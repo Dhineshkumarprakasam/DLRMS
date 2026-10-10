@@ -70,6 +70,20 @@ public class IndexPageController {
     @GetMapping("/equipment")
     public String showEquipmentPage(Model model) {
         model.addAttribute("equipment", new EquipmentDTO());
+        loadEquipment(model);
+        return "equipment";
+    }
+
+    @GetMapping("/edit-equipment")
+    public String editEquipment(@RequestParam Long id, Model model) {
+        try {
+            model.addAttribute("equipment",
+                    restTemplate.getForObject(EQUIPMENT_BACKEND_URL + "/" + id, EquipmentDTO.class));
+        } catch (Exception e) {
+            model.addAttribute("equipment", new EquipmentDTO());
+            model.addAttribute("error", "Could not load equipment. Check that the equipment service is running.");
+        }
+        loadEquipment(model);
         return "equipment";
     }
 
@@ -92,10 +106,27 @@ public class IndexPageController {
     public String saveEquipment(@ModelAttribute("equipment") EquipmentDTO equipment,
                                RedirectAttributes redirectAttributes) {
         try {
-            restTemplate.postForObject(EQUIPMENT_BACKEND_URL + "/save", equipment, EquipmentDTO.class);
-            redirectAttributes.addFlashAttribute("message", "Equipment registered.");
+            if (equipment.getId() == null) {
+                restTemplate.postForObject(EQUIPMENT_BACKEND_URL + "/save", equipment, EquipmentDTO.class);
+                redirectAttributes.addFlashAttribute("message", "Equipment registered.");
+            } else {
+                restTemplate.put(EQUIPMENT_BACKEND_URL + "/" + equipment.getId(), equipment);
+                redirectAttributes.addFlashAttribute("message", "Equipment updated.");
+            }
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Could not save equipment. Check the equipment service and database.");
+            redirectAttributes.addFlashAttribute("error",
+                    "Could not save equipment. Check that the serial number is unique and the service is running.");
+        }
+        return "redirect:/equipment";
+    }
+
+    @PostMapping("/delete-equipment")
+    public String deleteEquipment(@RequestParam Long id, RedirectAttributes redirectAttributes) {
+        try {
+            restTemplate.delete(EQUIPMENT_BACKEND_URL + "/" + id);
+            redirectAttributes.addFlashAttribute("message", "Equipment deleted.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Could not delete equipment. Check that the service is running.");
         }
         return "redirect:/equipment";
     }
@@ -158,7 +189,18 @@ public class IndexPageController {
         }
     }
 
+    private void loadEquipment(Model model) {
+        try {
+            EquipmentDTO[] equipment = restTemplate.getForObject(EQUIPMENT_BACKEND_URL, EquipmentDTO[].class);
+            model.addAttribute("equipmentList", equipment == null ? new EquipmentDTO[0] : equipment);
+        } catch (Exception e) {
+            model.addAttribute("equipmentList", new EquipmentDTO[0]);
+            model.addAttribute("error", "Could not load equipment. Check that the equipment service and database are running.");
+        }
+    }
+
     public static class EquipmentDTO {
+        private Long id;
         private String serialNumber;
         private String name;
         private String category;
@@ -169,6 +211,14 @@ public class IndexPageController {
         private String ownership;
 
         public EquipmentDTO() {
+        }
+
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(Long id) {
+            this.id = id;
         }
 
         public String getSerialNumber() {

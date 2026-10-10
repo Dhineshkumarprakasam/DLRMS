@@ -6,4 +6,8 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface EquipmentRepository extends JpaRepository<Equipment, Long> {
+
+    boolean existsBySerialNumberIgnoreCase(String serialNumber);
+
+    boolean existsBySerialNumberIgnoreCaseAndIdNot(String serialNumber, Long id);
 }
