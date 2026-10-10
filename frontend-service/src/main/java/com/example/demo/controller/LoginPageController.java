@@ -12,6 +12,7 @@ import org.springframework.web.client.RestTemplate;
 @Controller
 public class LoginPageController {
     private final String BACKEND_URL = "http://localhost:8081/api/personnel";
+    private final String EQUIPMENT_BACKEND_URL = "http://localhost:8082/api/equipment";
     private final RestTemplate restTemplate;
 
     // Constructor injection using the bean from FrontendServiceApplication
@@ -46,8 +47,64 @@ public class LoginPageController {
         } catch (Exception e) {
             model.addAttribute("errorMessage", "User not found or backend offline.");
         }
-        
+
         model.addAttribute("user", new User());
         return "index";
+    }
+
+    // 4. Return the equipment registration page
+    @GetMapping("/equipment")
+    public String showEquipmentPage(Model model) {
+        model.addAttribute("equipment", new EquipmentDTO());
+        return "equipment";
+    }
+
+    // 5. Call backend to save equipment data (Matched to form action: /submit-equipment)
+    @PostMapping("/submit-equipment")
+    public String saveEquipment(@ModelAttribute("equipment") EquipmentDTO equipment) {
+        try {
+            restTemplate.postForObject(EQUIPMENT_BACKEND_URL + "/save", equipment, EquipmentDTO.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "redirect:/equipment";
+    }
+
+    // DTO matching equipment entity fields for form binding
+    public static class EquipmentDTO {
+        private String serialNumber;
+        private String name;
+        private String category;
+        private String status;
+        private String operationalCondition;
+        private String location;
+        private Long unitId;
+        private String ownership;
+
+        public EquipmentDTO() {}
+
+        public String getSerialNumber() { return serialNumber; }
+        public void setSerialNumber(String serialNumber) { this.serialNumber = serialNumber; }
+
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+
+        public String getCategory() { return category; }
+        public void setCategory(String category) { this.category = category; }
+
+        public String getStatus() { return status; }
+        public void setStatus(String status) { this.status = status; }
+
+        public String getOperationalCondition() { return operationalCondition; }
+        public void setOperationalCondition(String operationalCondition) { this.operationalCondition = operationalCondition; }
+
+        public String getLocation() { return location; }
+        public void setLocation(String location) { this.location = location; }
+
+        public Long getUnitId() { return unitId; }
+        public void setUnitId(Long unitId) { this.unitId = unitId; }
+
+        public String getOwnership() { return ownership; }
+        public void setOwnership(String ownership) { this.ownership = ownership; }
     }
 }
