@@ -16,7 +16,7 @@ public class IndexPageController {
 
     private final String BACKEND_URL = "http://localhost:8081/api/personnel";
     private final String SUPPLIES_BACKEND_URL = "http://localhost:8082/api/supplies";
-    private final String EQUIPMENT_BACKEND_URL = "http://localhost:8082/api/equipment";
+    private final String EQUIPMENT_BACKEND_URL = "http://localhost:8084/api/equipment";
     private final RestTemplate restTemplate;
 
     public IndexPageController(RestTemplate restTemplate) {
