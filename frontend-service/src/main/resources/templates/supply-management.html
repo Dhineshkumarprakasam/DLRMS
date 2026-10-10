@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Defense Logistics | Supply &amp; Inventory</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<nav class="navbar navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand" th:href="@{/}">Defense Logistics</a>
+        <a class="btn btn-outline-light btn-sm" th:href="@{/}">All modules</a>
+    </div>
+</nav>
+
+<main class="container py-4">
+    <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <h1 class="h3 mb-1">Supply &amp; Inventory Management</h1>
+    <p class="text-secondary">Track essential supplies, current stock levels, and replenishment requirements.</p>
+
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header" th:text="${supplyItem.id == null ? 'Add supply item' : 'Edit supply item'}">Add supply item</div>
+                <div class="card-body">
+                    <form th:action="@{/submit-supply}" th:object="${supplyItem}" method="post">
+                        <input type="hidden" th:field="*{id}">
+                        <div class="mb-3">
+                            <label class="form-label" for="itemCode">Item code</label>
+                            <input class="form-control" id="itemCode" th:field="*{itemCode}" maxlength="40" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="name">Item name</label>
+                            <input class="form-control" id="name" th:field="*{name}" maxlength="120" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="category">Category</label>
+                            <select class="form-select" id="category" th:field="*{category}" required>
+                                <option value="">Select a category</option>
+                                <option value="MEDICAL">Medical</option>
+                                <option value="PETROLEUM">Petroleum</option>
+                                <option value="FOOD">Food &amp; water</option>
+                                <option value="GENERAL">General</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label" for="unit">Unit</label>
+                                <input class="form-control" id="unit" th:field="*{unit}" placeholder="e.g. units, litres, kg" maxlength="20" required>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label" for="quantityOnHand">Stock on hand</label>
+                                <input class="form-control" id="quantityOnHand" type="number" min="0" step="0.001" th:field="*{quantityOnHand}" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="reorderLevel">Reorder level</label>
+                            <input class="form-control" id="reorderLevel" type="number" min="0" step="0.001" th:field="*{reorderLevel}" required>
+                            <div class="form-text">An item is flagged for replenishment when stock is at or below this level.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="storageLocation">Storage location</label>
+                            <input class="form-control" id="storageLocation" th:field="*{storageLocation}" maxlength="120">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="expirationDate">Expiration date (optional)</label>
+                            <input class="form-control" id="expirationDate" type="date" th:field="*{expirationDate}">
+                        </div>
+                        <button class="btn btn-primary" type="submit">Save item</button>
+                        <a class="btn btn-outline-secondary" th:href="@{/supplies}">Clear</a>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>Inventory</span>
+                    <span class="badge text-bg-warning"
+                          th:text="${#lists.size(supplies.?[quantityOnHand.compareTo(reorderLevel) <= 0]) + ' items need replenishment'}">0 items need replenishment</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle mb-0">
+                        <thead>
+                        <tr>
+                            <th>Code / item</th><th>Category</th><th>Stock</th><th>Reorder at</th><th>Location / expiry</th><th>Status</th><th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="item : ${supplies}">
+                            <td><strong th:text="${item.itemCode}"></strong><br><span th:text="${item.name}"></span></td>
+                            <td th:text="${item.category}"></td>
+                            <td><span th:text="${item.quantityOnHand}"></span> <span th:text="${item.unit}"></span></td>
+                            <td><span th:text="${item.reorderLevel}"></span> <span th:text="${item.unit}"></span></td>
+                            <td>
+                                <span th:text="${item.storageLocation != null and !item.storageLocation.isBlank() ? item.storageLocation : '—'}"></span>
+                                <br><small class="text-secondary" th:if="${item.expirationDate != null}" th:text="|Expires ${item.expirationDate}|"></small>
+                            </td>
+                            <td>
+                                <span th:if="${item.quantityOnHand.compareTo(item.reorderLevel) <= 0}" class="badge text-bg-warning">Replenish</span>
+                                <span th:if="${item.quantityOnHand.compareTo(item.reorderLevel) > 0}" class="badge text-bg-success">In stock</span>
+                            </td>
+                            <td class="text-nowrap">
+                                <a class="btn btn-sm btn-outline-primary" th:href="@{/edit-supply(id=${item.id})}">Edit</a>
+                                <form class="d-inline" th:action="@{/delete-supply}" method="post">
+                                    <input type="hidden" name="id" th:value="${item.id}">
+                                    <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(supplies)}">
+                            <td colspan="7" class="text-center text-secondary py-4">No supply items yet. Add your first item using the form.</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">Replenishment requirements</div>
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle mb-0">
+                        <thead>
+                        <tr><th>Item</th><th>Available</th><th>Reorder level</th><th>Suggested replenishment</th></tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="item : ${supplies}" th:if="${item.quantityOnHand.compareTo(item.reorderLevel) <= 0}">
+                            <td><strong th:text="${item.name}"></strong><br><small class="text-secondary" th:text="${item.itemCode}"></small></td>
+                            <td><span th:text="${item.quantityOnHand}"></span> <span th:text="${item.unit}"></span></td>
+                            <td><span th:text="${item.reorderLevel}"></span> <span th:text="${item.unit}"></span></td>
+                            <td><strong th:text="${item.reorderLevel.subtract(item.quantityOnHand)}"></strong> <span th:text="${item.unit}"></span></td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(supplies.?[quantityOnHand.compareTo(reorderLevel) <= 0])}">
+                            <td colspan="4" class="text-center text-secondary py-3">No replenishment required.</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</main>
+</body>
+</html>

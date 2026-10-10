@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.model.User;
+import com.example.demo.model.SupplyItem;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +15,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class LoginPageController {
 
     private final String BACKEND_URL = "http://localhost:8081/api/personnel";
+    private final String SUPPLIES_BACKEND_URL = "http://localhost:8082/api/supplies";
     private final RestTemplate restTemplate;
 
     public LoginPageController(RestTemplate restTemplate) {
@@ -42,6 +44,53 @@ public class LoginPageController {
         }
         loadPersonnel(model);
         return "personnel-management";
+    }
+
+    @GetMapping("/supplies")
+    public String showSuppliesPage(Model model) {
+        model.addAttribute("supplyItem", new SupplyItem());
+        loadSupplies(model);
+        return "supply-management";
+    }
+
+    @GetMapping("/edit-supply")
+    public String editSupply(@RequestParam Long id, Model model) {
+        try {
+            model.addAttribute("supplyItem",
+                    restTemplate.getForObject(SUPPLIES_BACKEND_URL + "/" + id, SupplyItem.class));
+        } catch (Exception e) {
+            model.addAttribute("supplyItem", new SupplyItem());
+            model.addAttribute("error", "Could not load the supply item. Check that the supplies service is running.");
+        }
+        loadSupplies(model);
+        return "supply-management";
+    }
+
+    @PostMapping("/submit-supply")
+    public String saveSupply(@ModelAttribute SupplyItem supplyItem, RedirectAttributes redirectAttributes) {
+        try {
+            if (supplyItem.getId() == null) {
+                restTemplate.postForObject(SUPPLIES_BACKEND_URL + "/save", supplyItem, SupplyItem.class);
+            } else {
+                restTemplate.put(SUPPLIES_BACKEND_URL + "/" + supplyItem.getId(), supplyItem);
+            }
+            redirectAttributes.addFlashAttribute("message", "Supply item saved.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Could not save the supply item. Check the service and item details.");
+        }
+        return "redirect:/supplies";
+    }
+
+    @PostMapping("/delete-supply")
+    public String deleteSupply(@RequestParam Long id, RedirectAttributes redirectAttributes) {
+        try {
+            restTemplate.delete(SUPPLIES_BACKEND_URL + "/" + id);
+            redirectAttributes.addFlashAttribute("message", "Supply item deleted.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error",
+                    "Could not delete the supply item. Check that the supplies service is running.");
+        }
+        return "redirect:/supplies";
     }
 
     @PostMapping("/submit-personnel")
@@ -78,5 +127,16 @@ public class LoginPageController {
             model.addAttribute("personnel", new User[0]);
             model.addAttribute("error", "Could not load personnel. Check that the personnel service and database are running.");
         }
+    }
+
+    private void loadSupplies(Model model) {
+        try {
+            SupplyItem[] items = restTemplate.getForObject(SUPPLIES_BACKEND_URL, SupplyItem[].class);
+            model.addAttribute("supplies", items == null ? new SupplyItem[0] : items);
+        } catch (Exception e) {
+            model.addAttribute("supplies", new SupplyItem[0]);
+            model.addAttribute("error", "Could not load supplies. Check that the supplies service and database are running.");
+        }
+
     }
 }
