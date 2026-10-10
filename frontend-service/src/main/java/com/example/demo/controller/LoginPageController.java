@@ -13,7 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
-import org.springframework.stereotype.Controller;
+import org.springframework.stereotype.Controller; //Test Comment
 import org.springframework.ui.Model;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
