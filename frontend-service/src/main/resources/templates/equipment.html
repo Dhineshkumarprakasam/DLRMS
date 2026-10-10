@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Equipment Management</title>
+</head>
+<body>
+<h2>Equipment Registration Form</h2>
+
+<form th:action="@{/submit-equipment}" th:object="${equipment}" method="post">
+
+    <div>
+        <label>Serial Number:</label>
+        <input type="text" th:field="*{serialNumber}" required />
+    </div>
+
+    <div>
+        <label>Equipment Name:</label>
+        <input type="text" th:field="*{name}" required />
+    </div>
+
+    <div>
+        <label>Category:</label>
+        <input type="text" th:field="*{category}" />
+    </div>
+
+    <div>
+        <label>Status:</label>
+        <select th:field="*{status}">
+            <option value="AVAILABLE">Available</option>
+            <option value="ASSIGNED">Assigned</option>
+            <option value="MAINTENANCE">Maintenance</option>
+            <option value="DECOMMISSIONED">Decommissioned</option>
+        </select>
+    </div>
+
+    <div>
+        <label>Operational Condition:</label>
+        <select th:field="*{operationalCondition}">
+            <option value="SERVICEABLE">Serviceable</option>
+            <option value="UNSERVICEABLE">Unserviceable</option>
+            <option value="REPAIRABLE">Repairable</option>
+        </select>
+    </div>
+
+    <div>
+        <label>Current Location:</label>
+        <input type="text" th:field="*{location}" />
+    </div>
+
+    <div>
+        <label>Unit ID:</label>
+        <input type="number" th:field="*{unitId}" />
+    </div>
+
+    <div>
+        <label>Ownership:</label>
+        <input type="text" th:field="*{ownership}" />
+    </div>
+
+    <br>
+    <button type="submit">Save Equipment</button>
+</form>
+</body>
+</html>

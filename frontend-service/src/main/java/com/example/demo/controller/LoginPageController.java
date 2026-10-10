@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import org.springframework.stereotype.Controller;
 import com.example.demo.model.User;
 import com.example.demo.model.SupplyItem;
 import org.springframework.stereotype.Controller;
@@ -11,6 +12,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+// This legacy controller is intentionally kept as a no-op placeholder.
+// The active web routes for the frontend are owned by IndexPageController,
+// which keeps the merged feature set aligned with the main branch and the equipment module.
 @Controller
 public class LoginPageController {
 
