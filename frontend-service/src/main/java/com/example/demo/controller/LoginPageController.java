@@ -12,13 +12,13 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
-public class IndexPageController {
+public class LoginPageController {
 
     private final String BACKEND_URL = "http://localhost:8081/api/personnel";
     private final String SUPPLIES_BACKEND_URL = "http://localhost:8082/api/supplies";
     private final RestTemplate restTemplate;
 
-    public IndexPageController(RestTemplate restTemplate) {
+    public LoginPageController(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
 
