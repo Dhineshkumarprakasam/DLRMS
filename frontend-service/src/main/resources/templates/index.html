@@ -35,6 +35,12 @@
             </section>
         </div>
         <div class="col-sm-6 col-lg-4">
+            <section class="card h-100 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <span class="badge text-bg-success align-self-start mb-3">Available</span>
+                    <h2 class="h5 card-title">Equipment</h2>
+                    <p class="card-text text-secondary mb-0">Equipment records and assignment tracking.</p>
+                    <a class="btn btn-primary mt-auto align-self-start" th:href="@{/equipment}">Open equipment</a>
             <section class="card h-100">
                 <div class="card-body">
                     <span class="badge text-bg-secondary mb-3">Coming soon</span>
@@ -44,11 +50,12 @@
             </section>
         </div>
         <div class="col-sm-6 col-lg-4">
-            <section class="card h-100">
-                <div class="card-body">
-                    <span class="badge text-bg-secondary mb-3">Coming soon</span>
+            <section class="card h-100 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <span class="badge text-bg-success align-self-start mb-3">Available</span>
                     <h2 class="h5 card-title">Vehicles</h2>
-                    <p class="card-text text-secondary mb-0">Vehicle inventory and operational status.</p>
+                    <p class="card-text text-secondary">Manage vehicle records, availability, and operational status.</p>
+                    <a class="btn btn-primary mt-auto align-self-start" th:href="@{/vehicles}">Open vehicles</a>
                 </div>
             </section>
         </div>
