@@ -12,7 +12,7 @@ import org.springframework.web.client.RestTemplate;
 @Controller
 public class VehiclePageController {
 
-    private static final String BACKEND_URL = "http://localhost:8082/api/vehicles";
+    private static final String BACKEND_URL = "http://localhost:8083/api/vehicles";
 
     private final RestTemplate restTemplate;
 
