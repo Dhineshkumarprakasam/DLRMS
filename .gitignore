@@ -5,3 +5,7 @@
 .sts-4/
 *.log
 .DS_Store
+.metadata/ 
+target/ 
+.settings/ 
+*.class 

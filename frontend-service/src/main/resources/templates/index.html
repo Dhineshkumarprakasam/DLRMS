@@ -1,0 +1,75 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Personnel Management</title>
+</head>
+<body>
+    <h2>Personnel Registration Form</h2>
+    
+    <form th:action="@{/submit-personnel}" th:object="${user}" method="post">
+        
+        <div>
+            <label>Service Number:</label>
+            <input type="text" th:field="*{serviceNumber}" />
+        </div>
+
+        <div>
+            <label>Name:</label>
+            <input type="text" th:field="*{name}" />
+        </div>
+
+        <div>
+            <label>Rank:</label>
+            <input type="text" th:field="*{rank}" />
+        </div>
+
+        <div>
+            <label>Role:</label>
+            <input type="text" th:field="*{role}" />
+        </div>
+
+        <div>
+            <label>Specialization:</label>
+            <input type="text" th:field="*{specialization}" />
+        </div>
+
+        <div>
+            <label>Unit ID:</label>
+            <input type="number" th:field="*{unitId}" />
+        </div>
+
+        <div>
+            <label>Current Location:</label>
+            <input type="text" th:field="*{currentLocation}" />
+        </div>
+
+        <div>
+            <label>Status:</label>
+            <select th:field="*{status}">
+                <option value="AVAILABLE">Available</option>
+                <option value="DEPLOYED">Deployed</option>
+                <option value="ON_LEAVE">On Leave</option>
+                <option value="UNAVAILABLE">Unavailable</option>
+            </select>
+        </div>
+
+        <div>
+            <label>Phone:</label>
+            <input type="tel" th:field="*{phone}" />
+        </div>
+
+        <div>
+            <label>Email:</label>
+            <input type="email" th:field="*{email}" />
+        </div>
+
+        <div>
+            <label>Is Driver:</label>
+            <input type="checkbox" th:field="*{isDriver}" />
+        </div>
+
+        <br>
+        <button type="submit">Save User</button>
+    </form>
+</body>
+</html>
