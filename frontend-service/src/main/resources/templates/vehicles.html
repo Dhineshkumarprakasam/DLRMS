@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Vehicles | Defense Logistics</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            color: #252a30;
+            background: #f6f8fa;
+        }
+
+        .navbar {
+            padding: 16px max(calc((100% - 1140px) / 2), 24px);
+            color: white;
+            background: #212529;
+            font-size: 20px;
+        }
+
+        main {
+            max-width: 1140px;
+            margin: 48px auto;
+            padding: 0 24px;
+        }
+
+        h1 {
+            margin-bottom: 8px;
+            font-size: 30px;
+        }
+
+        .subtitle {
+            margin-top: 0;
+            margin-bottom: 28px;
+            color: #727b84;
+        }
+
+        .card {
+            margin-bottom: 24px;
+            padding: 24px;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.06);
+        }
+
+        h2 {
+            margin-top: 0;
+            font-size: 21px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            font-size: 15px;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 11px 18px;
+            color: white;
+            background: #0d6efd;
+            border: 0;
+            border-radius: 5px;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0b5ed7;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #0d6efd;
+            text-decoration: none;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #dee2e6;
+            text-align: left;
+        }
+
+        th {
+            background: #f6f8fa;
+        }
+
+        @media (max-width: 650px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="navbar">Defense Logistics</header>
+
+    <main>
+        <a class="back-link" th:href="@{/}">← Back to logistics modules</a>
+
+        <h1>Vehicle management</h1>
+        <p class="subtitle">Manage vehicle records, availability, and operational status.</p>
+
+        <section class="card">
+            <h2>Register a vehicle</h2>
+
+            <form th:action="@{/submit-vehicle}" th:object="${vehicle}" method="post">
+                <div class="form-grid">
+                    <div>
+                        <label>Registration Number</label>
+                        <input type="text" th:field="*{registrationNo}" required>
+                    </div>
+
+                    <div>
+                        <label>Type</label>
+                        <input type="text" th:field="*{type}">
+                    </div>
+
+                    <div>
+                        <label>Model</label>
+                        <input type="text" th:field="*{model}">
+                    </div>
+
+                    <div>
+                        <label>Capacity</label>
+                        <input type="number" th:field="*{capacity}">
+                    </div>
+
+                    <div>
+                        <label>Fuel Type</label>
+                        <input type="text" th:field="*{fuelType}">
+                    </div>
+
+                    <div>
+                        <label>Owner Unit ID</label>
+                        <input type="number" th:field="*{ownerUnitId}">
+                    </div>
+
+                    <div>
+                        <label>Location</label>
+                        <input type="text" th:field="*{location}">
+                    </div>
+
+                    <div>
+                        <label>Status</label>
+                        <select th:field="*{status}">
+                            <option value="AVAILABLE">Available</option>
+                            <option value="ALLOCATED">Allocated</option>
+                            <option value="UNDER_MAINTENANCE">Under Maintenance</option>
+                            <option value="DECOMMISSIONED">Decommissioned</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label>Condition</label>
+                        <select th:field="*{condition}">
+                            <option value="GOOD">Good</option>
+                            <option value="FAIR">Fair</option>
+                            <option value="POOR">Poor</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label>Odometer (km)</label>
+                        <input type="number" th:field="*{odometerKm}">
+                    </div>
+                </div>
+
+                <button type="submit">Save Vehicle</button>
+            </form>
+        </section>
+
+        <section class="card">
+            <h2>Registered vehicles</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Registration Number</th>
+                        <th>Type</th>
+                        <th>Model</th>
+                        <th>Status</th>
+                        <th>Location</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="item : ${vehicles}">
+                        <td th:text="${item.registrationNo}"></td>
+                        <td th:text="${item.type}"></td>
+                        <td th:text="${item.model}"></td>
+                        <td th:text="${item.status}"></td>
+                        <td th:text="${item.location}"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+</body>
+</html>
