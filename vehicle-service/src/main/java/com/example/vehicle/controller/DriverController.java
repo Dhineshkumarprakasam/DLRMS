@@ -2,8 +2,6 @@ package com.example.vehicle.controller;
 
 import com.example.vehicle.model.Driver;
 import com.example.vehicle.repository.DriverRepository;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -17,41 +15,29 @@ public class DriverController {
         this.driverRepository = driverRepository;
     }
 
+    @GetMapping
+    public List<Driver> getAllDrivers() {
+        return driverRepository.findAll();
+    }
+
     @GetMapping("/{id}")
-    public ResponseEntity<Driver> getDriverById(@PathVariable Long id) {
-        return driverRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public Driver getDriverById(@PathVariable Long id) {
+        return driverRepository.findById(id).orElse(null);
     }
 
     @PostMapping("/save")
-    public ResponseEntity<Driver> saveDriver(@RequestBody Driver driver) {
-        Driver savedDriver = driverRepository.save(driver);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedDriver);
+    public Driver saveDriver(@RequestBody Driver driver) {
+        return driverRepository.save(driver);
     }
-    @GetMapping
-    public ResponseEntity<List<Driver>> getAllDrivers() {
-        return ResponseEntity.ok(driverRepository.findAll());
-    }
+
     @PutMapping("/{id}")
-    public ResponseEntity<Driver> updateDriver(
-            @PathVariable Long id,
-            @RequestBody Driver driver) {
-
-        return driverRepository.findById(id)
-                .map(existingDriver -> {
-                    driver.setId(existingDriver.getId());
-                    return ResponseEntity.ok(driverRepository.save(driver));
-                })
-                .orElse(ResponseEntity.notFound().build());
+    public void updateDriver(@PathVariable Long id, @RequestBody Driver driver) {
+        driver.setId(id);
+        driverRepository.save(driver);
     }
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteDriver(@PathVariable Long id) {
-        if (!driverRepository.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
 
+    @DeleteMapping("/{id}")
+    public void deleteDriver(@PathVariable Long id) {
         driverRepository.deleteById(id);
-        return ResponseEntity.noContent().build();
     }
 }
