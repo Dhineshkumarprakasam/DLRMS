@@ -1,10 +1,9 @@
 package com.example.demo.controller;
-
 import com.example.demo.model.User;
 import com.example.demo.repository.PersonnelRepository;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/personnel")
@@ -16,16 +15,29 @@ public class PersonnelController {
         this.personnelRepository = personnelRepository;
     }
 
+    @GetMapping
+    public List<User> getAllPersonnel() {
+        return personnelRepository.findAll();
+    }
+
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
-        return personnelRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public User getUserById(@PathVariable Long id) {
+        return personnelRepository.findById(id).orElse(null);
     }
 
     @PostMapping("/save")
-    public ResponseEntity<User> submitPersonnelForm(@RequestBody User user) {
-        User savedUser = personnelRepository.save(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
+    public User savePersonnel(@RequestBody User user) {
+        return personnelRepository.save(user);
+    }
+
+    @PutMapping("/{id}")
+    public void updatePersonnel(@PathVariable Long id, @RequestBody User user) {
+        user.setId(id);
+        personnelRepository.save(user);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deletePersonnel(@PathVariable Long id) {
+        personnelRepository.deleteById(id);
     }
 }
